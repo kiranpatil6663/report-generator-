@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1758898849111,
+    "sessionId": "session_002",
+    "assessmentType": "Card Sorting",
+    "fileName": "report-session_002-1758898849105.pdf",
+    "filePath": "C:\\Users\\sharan patil\\OneDrive\\Desktop\\report generator app\\backend\\reports\\report-session_002-1758898849105.pdf",
+    "generatedAt": "2025-09-26T15:00:49.112Z",
+    "fileSize": "0.11 MB",
+    "status": "completed",
+    "userId": 1758898745390
+  },
+  {
+    "id": 1758898807609,
+    "sessionId": "session_001",
+    "assessmentType": "HR Assessment",
+    "fileName": "report-session_001-1758898807601.pdf",
+    "filePath": "C:\\Users\\sharan patil\\OneDrive\\Desktop\\report generator app\\backend\\reports\\report-session_001-1758898807601.pdf",
+    "generatedAt": "2025-09-26T15:00:07.609Z",
+    "fileSize": "0.10 MB",
+    "status": "completed",
+    "userId": 1758898745390
+  }
+]

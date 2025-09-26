@@ -1,0 +1,479 @@
+# Configuration System Documentation
+
+## Overview
+
+The Assessment Management System uses a flexible, JSON-based configuration system that enables dynamic PDF report generation without code modifications. The system supports different assessment types through configuration files that define sections, data field mappings, and classification ranges.
+
+## System Architecture
+
+### Core Components
+
+```
+configs/
+├── as_card_01.json    # Cardiac Analysis Configuration
+├── as_hr_02.json      # Health Analysis Configuration
+data/
+├── data.js            # Assessment data storage and helper functions
+templates/
+├── shared-template.hbs # Universal Handlebars template for all reports
+```
+
+### Data Flow
+
+1. API receives `session_id` parameter
+2. System looks up session data using `findSessionById()`
+3. System determines assessment type from `assessment_id` field
+4. Corresponding configuration file is loaded
+5. Data is extracted using JSONPath expressions
+6. Classification ranges are applied
+7. PDF is generated using shared template
+
+## Configuration Structure
+
+### Base Configuration Schema
+
+```json
+{
+  "assessment_id": "string",          // Unique identifier (e.g., "as_card_01")
+  "assessment_name": "string",        // Display name for reports
+  "sections": [                       // Array of report sections
+    {
+      "section_name": "string",       // Section display title
+      "fields": [                     // Array of fields in section
+        {
+          "label": "string",          // Field display label
+          "extractFrom": "string",    // JSONPath expression
+          "unit": "string",           // Measurement unit
+          "format": "string",         // Optional: "date" for timestamps
+          "classification": {         // Optional: value classification
+            "ranges": [...]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+## 1. Adding New Assessment Types
+
+### Step 1: Create Configuration File
+
+Create a new JSON file in `configs/` directory following the naming pattern `as_[type]_[number].json`.
+
+**Example: Mental Health Assessment (as_mental_03.json)**
+
+```json
+{
+  "assessment_id": "as_mental_03",
+  "assessment_name": "Mental Health Assessment",
+  "sections": [
+    {
+      "section_name": "Overall Mental Health",
+      "fields": [
+        {
+          "label": "Stress Level",
+          "extractFrom": "$.vitalsMap.metadata.heart_scores.stress_index",
+          "unit": "",
+          "classification": {
+            "ranges": [
+              { "min": 0, "max": 1.5, "status": "Low Stress", "color": "green" },
+              { "min": 1.6, "max": 3.0, "status": "Moderate Stress", "color": "yellow" },
+              { "min": 3.1, "max": 10, "status": "High Stress", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Sleep Quality Score",
+          "extractFrom": "$.sleepData.qualityScore",
+          "unit": "%",
+          "classification": {
+            "ranges": [
+              { "min": 80, "max": 100, "status": "Excellent", "color": "green" },
+              { "min": 60, "max": 79, "status": "Good", "color": "blue" },
+              { "min": 40, "max": 59, "status": "Fair", "color": "yellow" },
+              { "min": 0, "max": 39, "status": "Poor", "color": "red" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "Cognitive Performance",
+      "fields": [
+        {
+          "label": "Reaction Time",
+          "extractFrom": "$.cognitiveTests.reactionTime",
+          "unit": "ms",
+          "classification": {
+            "ranges": [
+              { "min": 0, "max": 200, "status": "Excellent", "color": "green" },
+              { "min": 201, "max": 300, "status": "Good", "color": "blue" },
+              { "min": 301, "max": 500, "status": "Average", "color": "yellow" },
+              { "min": 501, "max": 2000, "status": "Slow", "color": "red" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Step 2: Add Sample Data
+
+Update `data.js` to include sample data for the new assessment type:
+
+```javascript
+const newAssessmentData = {
+  "session_id": "session_003",
+  "accuracy": 85,
+  "assessment_id": "as_mental_03",
+  "sleepData": {
+    "qualityScore": 72,
+    "duration": 7.5,
+    "efficiency": 88
+  },
+  "cognitiveTests": {
+    "reactionTime": 245,
+    "memoryScore": 78,
+    "attentionSpan": 15
+  },
+  "vitalsMap": {
+    "metadata": {
+      "heart_scores": {
+        "stress_index": 2.1
+      }
+    }
+  },
+  "timestamp": 1740671597044
+};
+```
+
+### Step 3: No Code Changes Required
+
+The system automatically detects and processes the new configuration file when a session with `assessment_id: "as_mental_03"` is processed.
+
+## 2. Data Field Mappings
+
+### JSONPath Expressions
+
+The system uses JSONPath expressions in the `extractFrom` field to extract data from session objects.
+
+#### Basic Examples
+
+```json
+{
+  "label": "Overall Score",
+  "extractFrom": "$.accuracy"              // Root level field
+},
+{
+  "label": "Heart Rate", 
+  "extractFrom": "$.vitalsMap.vitals.heart_rate"  // Nested object
+},
+{
+  "label": "BMI",
+  "extractFrom": "$.bodyCompositionData.BMI"      // Nested data
+}
+```
+
+#### Advanced JSONPath Examples
+
+```json
+{
+  "label": "Exercise Duration",
+  "extractFrom": "$.exercises[?(@.id == 235)].setList[0].time"  // Array filtering
+},
+{
+  "label": "Frontal View Score",
+  "extractFrom": "$.exercises[?(@.name == 'Frontal body view')].analysisScore"  // String matching
+},
+{
+  "label": "First Exercise Name",
+  "extractFrom": "$.exercises[0].name"            // Array indexing
+}
+```
+
+#### Complex Data Extraction Patterns
+
+**Extracting from Exercise Arrays:**
+```json
+{
+  "label": "Squat Reps",
+  "extractFrom": "$.exercises[?(@.name == 'Squat')].totalReps",
+  "unit": "reps"
+}
+```
+
+**Extracting Nested Metadata:**
+```json
+{
+  "label": "VO2 Max",
+  "extractFrom": "$.vitalsMap.metadata.physiological_scores.vo2max",
+  "unit": "ml/kg/min"
+}
+```
+
+### Supported Data Types
+
+#### Date Formatting
+```json
+{
+  "label": "Assessment Date",
+  "extractFrom": "$.timestamp",
+  "format": "date",
+  "unit": ""
+}
+```
+
+#### Numerical Values
+```json
+{
+  "label": "Heart Rate",
+  "extractFrom": "$.vitalsMap.vitals.heart_rate",
+  "unit": "beats/min"
+}
+```
+
+#### String Values
+```json
+{
+  "label": "Gender",
+  "extractFrom": "$.gender",
+  "unit": ""
+}
+```
+
+## 3. Classification Ranges
+
+### Range Structure
+
+```json
+{
+  "classification": {
+    "ranges": [
+      {
+        "min": 0,           // Minimum value (inclusive)
+        "max": 100,         // Maximum value (inclusive)
+        "status": "string", // Display text for this range
+        "color": "string"   // Color coding: green, blue, yellow, red
+      }
+    ]
+  }
+}
+```
+
+### Color Coding Standards
+
+- **green**: Excellent/Normal/Optimal values
+- **blue**: Good/Above Average values  
+- **yellow**: Average/Elevated/Warning values
+- **red**: Poor/High Risk/Critical values
+
+### Range Examples
+
+#### Heart Rate Classifications
+```json
+{
+  "classification": {
+    "ranges": [
+      { "min": 60, "max": 80, "status": "Excellent", "color": "green" },
+      { "min": 50, "max": 59, "status": "Good", "color": "blue" },
+      { "min": 81, "max": 90, "status": "Good", "color": "blue" },
+      { "min": 91, "max": 100, "status": "Average", "color": "yellow" },
+      { "min": 101, "max": 200, "status": "High", "color": "red" }
+    ]
+  }
+}
+```
+
+#### BMI Classifications
+```json
+{
+  "classification": {
+    "ranges": [
+      { "min": 18.5, "max": 24.9, "status": "Normal", "color": "green" },
+      { "min": 25, "max": 29.9, "status": "Overweight", "color": "yellow" },
+      { "min": 30, "max": 50, "status": "Obese", "color": "red" },
+      { "min": 0, "max": 18.4, "status": "Underweight", "color": "yellow" }
+    ]
+  }
+}
+```
+
+#### Blood Pressure Classifications
+```json
+{
+  "classification": {
+    "ranges": [
+      { "min": 90, "max": 120, "status": "Normal", "color": "green" },
+      { "min": 121, "max": 130, "status": "Elevated", "color": "yellow" },
+      { "min": 131, "max": 140, "status": "High", "color": "red" }
+    ]
+  }
+}
+```
+
+## 4. Configuration File Examples
+
+### Complete Example: Cardiac Assessment (as_card_01.json)
+
+```json
+{
+  "assessment_id": "as_card_01",
+  "assessment_name": "Cardiac Analysis",
+  "sections": [
+    {
+      "section_name": "Overall Assessment",
+      "fields": [
+        {
+          "label": "Overall Health Score",
+          "extractFrom": "$.accuracy",
+          "unit": "%",
+          "classification": {
+            "ranges": [
+              { "min": 80, "max": 100, "status": "Excellent", "color": "green" },
+              { "min": 60, "max": 79, "status": "Good", "color": "blue" },
+              { "min": 40, "max": 59, "status": "Average", "color": "yellow" },
+              { "min": 0, "max": 39, "status": "Poor", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Assessment Date",
+          "extractFrom": "$.timestamp",
+          "format": "date",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "section_name": "Essential Health Metrics",
+      "fields": [
+        {
+          "label": "Heart Rate",
+          "extractFrom": "$.vitalsMap.vitals.heart_rate",
+          "unit": "beats/min",
+          "classification": {
+            "ranges": [
+              { "min": 60, "max": 80, "status": "Excellent", "color": "green" },
+              { "min": 50, "max": 59, "status": "Good", "color": "blue" },
+              { "min": 81, "max": 90, "status": "Good", "color": "blue" },
+              { "min": 91, "max": 100, "status": "Average", "color": "yellow" },
+              { "min": 101, "max": 200, "status": "High", "color": "red" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Complete Example: Health Assessment (as_hr_02.json)
+
+The as_hr_02.json configuration includes additional sections like:
+- **Key Body Vitals**: Heart rate, blood pressure, oxygen saturation
+- **Cardiovascular Status**: Wellness score, cardiac output, stress index
+- **Physical Performance**: VO2 Max, cardiovascular endurance
+- **Body Composition**: BMI, body fat percentage, lean mass
+- **Posture Analysis**: Frontal view score, side view score
+
+## System Features
+
+### Automatic Configuration Loading
+
+The system automatically:
+1. Detects assessment type from session data
+2. Loads appropriate configuration file
+3. Processes all sections and fields
+4. Applies classifications
+5. Generates PDF using shared template
+
+### Template Integration
+
+The shared Handlebars template (`shared-template.hbs`) works with all configuration types:
+
+```handlebars
+{{#each sections}}
+<div class="section">
+    <div class="section-header">{{title}}</div>
+    {{#each fields}}
+    <div class="field">
+        <span class="field-label">{{label}}:</span>
+        <span class="field-value">
+            {{value}} {{unit}}
+            {{#if classification}}
+                <span class="status-{{classification.color}}">
+                    ({{classification.status}})
+                </span>
+            {{/if}}
+        </span>
+    </div>
+    {{/each}}
+</div>
+{{/each}}
+```
+
+### Data Processing Logic
+
+The system processes data through these steps:
+
+1. **Session Lookup**: `findSessionById(sessionId)` retrieves session data
+2. **Configuration Loading**: Loads config based on `assessment_id`
+3. **Field Extraction**: Uses JSONPath to extract field values
+4. **Classification**: Applies range classifications to numerical values
+5. **Template Rendering**: Populates template with processed data
+6. **PDF Generation**: Converts HTML to PDF using Puppeteer
+
+## Best Practices
+
+### Configuration Design
+
+1. **Section Organization**: Group related fields logically
+2. **Field Naming**: Use clear, descriptive labels
+3. **Range Design**: Ensure ranges are medically/scientifically accurate
+4. **Color Consistency**: Use consistent color coding across assessments
+
+### JSONPath Best Practices
+
+1. **Validation**: Test JSONPath expressions with actual data
+2. **Error Handling**: Consider null/undefined values
+3. **Array Handling**: Use proper filtering for array elements
+4. **Performance**: Avoid overly complex expressions
+
+### Classification Guidelines
+
+1. **Medical Accuracy**: Ensure ranges reflect medical standards
+2. **Complete Coverage**: Ranges should cover all possible values
+3. **No Overlaps**: Avoid overlapping range boundaries
+4. **Clear Status**: Use descriptive status labels
+
+## Troubleshooting
+
+### Common Issues
+
+**Configuration Not Found**
+- Verify file naming matches `assessment_id`
+- Check JSON syntax validity
+- Ensure file is in `configs/` directory
+
+**Data Extraction Fails**
+- Test JSONPath expressions with actual data
+- Check for typos in field paths
+- Verify data structure matches expectations
+
+**Classification Not Applied**
+- Ensure ranges cover all possible values
+- Check for correct min/max boundaries
+- Verify numerical data types
+
+### Testing New Configurations
+
+1. Create minimal configuration with one section/field
+2. Test with existing sample data
+3. Verify PDF generation works
+4. Gradually add more complex fields
+5. Test edge cases and boundary values
+
+This configuration system provides maximum flexibility for adding new assessment types while maintaining consistency in report generation and presentation.

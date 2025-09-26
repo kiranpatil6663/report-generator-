@@ -1,0 +1,169 @@
+{
+  "assessment_id": "as_card_01",
+  "assessment_name": "Cardiac Analysis",
+  "sections": [
+    {
+      "section_name": "Overall Assessment",
+      "fields": [
+        {
+          "label": "Overall Health Score",
+          "extractFrom": "$.accuracy",
+          "unit": "%",
+          "classification": {
+            "ranges": [
+              { "min": 80, "max": 100, "status": "Excellent", "color": "green" },
+              { "min": 60, "max": 79, "status": "Good", "color": "blue" },
+              { "min": 40, "max": 59, "status": "Average", "color": "yellow" },
+              { "min": 0, "max": 39, "status": "Poor", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Assessment Date",
+          "extractFrom": "$.timestamp",
+          "format": "date",
+          "unit": ""
+        }
+      ]
+    },
+    {
+      "section_name": "Essential Health Metrics",
+      "fields": [
+        {
+          "label": "Heart Rate",
+          "extractFrom": "$.vitalsMap.vitals.heart_rate",
+          "unit": "beats/min",
+          "classification": {
+            "ranges": [
+              { "min": 60, "max": 80, "status": "Excellent", "color": "green" },
+              { "min": 50, "max": 59, "status": "Good", "color": "blue" },
+              { "min": 81, "max": 90, "status": "Good", "color": "blue" },
+              { "min": 91, "max": 100, "status": "Average", "color": "yellow" },
+              { "min": 101, "max": 200, "status": "High", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Blood Pressure Systolic",
+          "extractFrom": "$.vitalsMap.vitals.bp_sys",
+          "unit": "pressure units",
+          "classification": {
+            "ranges": [
+              { "min": 90, "max": 120, "status": "Normal", "color": "green" },
+              { "min": 121, "max": 130, "status": "Elevated", "color": "yellow" },
+              { "min": 131, "max": 140, "status": "High", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Blood Pressure Diastolic",
+          "extractFrom": "$.vitalsMap.vitals.bp_dia",
+          "unit": "pressure units",
+          "classification": {
+            "ranges": [
+              { "min": 60, "max": 80, "status": "Normal", "color": "green" },
+              { "min": 81, "max": 85, "status": "Elevated", "color": "yellow" },
+              { "min": 86, "max": 120, "status": "High", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Oxygen Saturation",
+          "extractFrom": "$.vitalsMap.vitals.oxy_sat_prcnt",
+          "unit": "%",
+          "classification": {
+            "ranges": [
+              { "min": 95, "max": 100, "status": "Normal", "color": "green" },
+              { "min": 90, "max": 94, "status": "Low", "color": "yellow" },
+              { "min": 0, "max": 89, "status": "Critical", "color": "red" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "Cardiovascular Endurance",
+      "fields": [
+        {
+          "label": "Wellness Score",
+          "extractFrom": "$.vitalsMap.wellness_score",
+          "unit": "",
+          "classification": {
+            "ranges": [
+              { "min": 80, "max": 100, "status": "Excellent", "color": "green" },
+              { "min": 60, "max": 79, "status": "Good", "color": "blue" },
+              { "min": 40, "max": 59, "status": "Average", "color": "yellow" },
+              { "min": 0, "max": 39, "status": "Poor", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Cardiac Output",
+          "extractFrom": "$.vitalsMap.metadata.cardiovascular.cardiac_out",
+          "unit": "L/min",
+          "classification": {
+            "ranges": [
+              { "min": 5, "max": 8, "status": "Normal", "color": "green" },
+              { "min": 4, "max": 4.9, "status": "Low", "color": "yellow" },
+              { "min": 8.1, "max": 15, "status": "High", "color": "yellow" }
+            ]
+          }
+        },
+        {
+          "label": "Heart Rate Variability (RMSSD)",
+          "extractFrom": "$.vitalsMap.metadata.heart_scores.rmssd",
+          "unit": "ms",
+          "classification": {
+            "ranges": [
+              { "min": 30, "max": 100, "status": "Good", "color": "green" },
+              { "min": 20, "max": 29, "status": "Average", "color": "yellow" },
+              { "min": 0, "max": 19, "status": "Poor", "color": "red" }
+            ]
+          }
+        },
+        {
+          "label": "Cardiovascular Endurance Test",
+          "extractFrom": "$.exercises[?(@.id == 235)].setList[0].time",
+          "unit": "seconds",
+          "classification": {
+            "ranges": [
+              { "min": 45, "max": 120, "status": "Good", "color": "green" },
+              { "min": 30, "max": 44, "status": "Average", "color": "yellow" },
+              { "min": 0, "max": 29, "status": "Poor", "color": "red" }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "section_name": "Physical Composition",
+      "fields": [
+        {
+          "label": "BMI",
+          "extractFrom": "$.bodyCompositionData.BMI",
+          "unit": "kg/m²",
+          "classification": {
+            "ranges": [
+              { "min": 18.5, "max": 24.9, "status": "Normal", "color": "green" },
+              { "min": 25, "max": 29.9, "status": "Overweight", "color": "yellow" },
+              { "min": 30, "max": 50, "status": "Obese", "color": "red" },
+              { "min": 0, "max": 18.4, "status": "Underweight", "color": "yellow" }
+            ]
+          }
+        },
+        {
+          "label": "Lean Mass",
+          "extractFrom": "$.bodyCompositionData.LM",
+          "unit": "kg",
+          "classification": {
+            "ranges": [
+              { "min": 60, "max": 100, "status": "High", "color": "green" },
+              { "min": 50, "max": 59, "status": "Average", "color": "blue" },
+              { "min": 0, "max": 49, "status": "Low", "color": "yellow" }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

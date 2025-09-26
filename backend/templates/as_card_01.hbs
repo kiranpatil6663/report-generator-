@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <title>{{assessmentInfo.name}} Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; background-color: #f8f8f8; padding: 20px; }
+        .section { margin-bottom: 1.5rem; }
+        .section-header { background: #f8f9fa; padding: 0.75rem; font-weight: 600; }
+        .field { margin: 8px 0; padding: 8px; background-color: #fafafa; }
+        .field-label { font-weight: bold; color: #555; }
+        .field-value { float: right; }
+        .status-green { color: #28a745; }
+        .status-blue { color: #007bff; }
+        .status-yellow { color: #ffc107; }
+        .status-red { color: #dc3545; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{assessmentInfo.name}}</h1>
+        </div>
+
+        {{#each sections}}
+        <div class="section">
+            <div class="section-header">{{title}}</div>
+            {{#each fields}}
+            <div class="field">
+                <span class="field-label">{{label}}</span>
+                <span class="field-value">
+                    {{value}} {{unit}}
+                    {{#if classification}}
+                        <strong class="status-{{classification.color}}">
+                            [{{classification.status}}]
+                        </strong>
+                    {{/if}}
+                </span>
+                <div style="clear: both;"></div>
+            </div>
+            {{/each}}
+        </div>
+        {{/each}}
+    </div>
+</body>
+</html>
